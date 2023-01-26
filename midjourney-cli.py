@@ -14,10 +14,9 @@ def load_config(config_file="config.json"):
         config = json.load(f)
         return config["CHANNEL_ID"], config["SERVER_ID"], config["SALAI_TOKEN"]
 
-        
-def check_blacklist(text:str):
-	pass
 
+def check_blacklist(text : str):
+	pass
 
 
 def PassPromptToSelfBot(prompt : str):
@@ -42,16 +41,14 @@ def PassPromptToSelfBot(prompt : str):
                                 "dm_permission":True,
                                 "options":[{"type":3,"name":"prompt","description":"The prompt to imagine","required":True}]},
                                 "attachments":[]}}
-    
-
     header = {
         'authorization' : SALAI_TOKEN
     }
     response = requests.post("https://discord.com/api/v9/interactions",
     json = payload, headers = header)
     return response
-    
-    
+
+
 def send_prompt_to_midjourney(prompt_list: list):
 	for i in prompt_list:
 		response = PassPromptToSelfBot(i)
@@ -84,10 +81,3 @@ elif args.text_prompt:
     send_prompt_to_midjourney([input_text])
 else:
     parser.error("Please provide either a file or text input")
-    
-
-
-    
-    
-    
-    
