@@ -16,11 +16,23 @@ The script can be run with the following arguments:
 * -t or --text-prompt: A single prompt passed as a string
 * -c or --config: Path to a config file If no config file is provided, the script will look for a file called config.json in the same directory.
 
+*  -h, --help            show this help message and exit
+*  -f FILE, --file FILE  Path to input file with prompts
+*  -t TEXT_PROMPT, --text-prompt TEXT_PROMPT Input with prompts.
+*  -c CONFIG, --config CONFIG Load config file.
+*  -s PROMPT_START, --prompt-start PROMPT_START Start all prompts with this text.
+*  -e PROMPT_END, --prompt-end PROMPT_END End all prompts with this text.
+*  --test-mode           enable test mode
 
-Command usage:
+### Command examples:
+
+Text input:
 
 ``$ python midjourney-cli.py -t "big rabbit smoking cigar --v 4"``
 
+Test mode on (Doesn't send anything to discord)
+
+``$ python midjourney-cli.py -t "big rabbit smoking cigar --v 4" --test-mode`` 
 
 ## Note
 
