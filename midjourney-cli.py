@@ -82,7 +82,7 @@ else:
 
 if args.file:
     with open(args.file, 'r') as f:
-        send_prompt_to_midjourney(f.readlines())
+        send_prompt_to_midjourney(f.readlines(),args.test_mode,args.prompt_start,args.prompt_end)
 elif args.text_prompt:
     input_text = args.text_prompt
     send_prompt_to_midjourney([input_text],args.test_mode,args.prompt_start,args.prompt_end)
