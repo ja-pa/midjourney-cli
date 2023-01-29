@@ -49,14 +49,16 @@ def PassPromptToSelfBot(prompt : str):
     return response
 
 
-def send_prompt_to_midjourney(prompt_list: list):
+def send_prompt_to_midjourney(prompt_list: list,test: bool,prompt_start: str,prompt_end: str):
 	for i in prompt_list:
-		response = PassPromptToSelfBot(i)
-		print("Prompt: ",i)
-		if response.status_code >= 400:
-			print("Request has failed; please try later")
-		else:
-			print("Your prompt image is being prepared, please wait a moment...")
+		prompt_text=prompt_start+i+prompt_end
+		print("Prompt: ",prompt_text)
+		if test == False:
+			response = PassPromptToSelfBot(prompt_text)
+			if response.status_code >= 400:
+				print("Request has failed; please try later")
+			else:
+				print("Your prompt image is being prepared, please wait a moment...")
 		time.sleep(3)
 
 
@@ -65,6 +67,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-f", "--file", help="Path to input file with prompts")
 parser.add_argument("-t", "--text-prompt", help="Input with prompts.")
 parser.add_argument("-c", "--config", help="Load config file.")
+parser.add_argument("-s", "--prompt-start",default="", help="Start all prompts with this text.")
+parser.add_argument("-e", "--prompt-end",default="", help="End all prompts with this text.")
+parser.add_argument("--test-mode",action='store_true',default=False, help="enable test mode")
+
+
 
 args = parser.parse_args()
 
@@ -78,6 +85,6 @@ if args.file:
         send_prompt_to_midjourney(f.readlines())
 elif args.text_prompt:
     input_text = args.text_prompt
-    send_prompt_to_midjourney([input_text])
+    send_prompt_to_midjourney([input_text],args.test_mode,args.prompt_start,args.prompt_end)
 else:
     parser.error("Please provide either a file or text input")
