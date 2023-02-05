@@ -112,16 +112,8 @@ parser.add_argument("-t", "--text-prompt", help="Input with prompts.")
 parser.add_argument("-c", "--config", help="Load config file.")
 parser.add_argument("-s", "--prompt-start", default="", help="Start all prompts with this text.")
 parser.add_argument("-e", "--prompt-end", default="", help="End all prompts with this text.")
-
-#parser.add_argument("-l", "--list-images", action='store_true', default=False, help=" ")
-
-
 parser.add_argument("-d", "--download-images", nargs='?',type=str, const="NO_PATH_GIVEN", help="Download images to selected directory.")
 parser.add_argument("-l","--list-images", type=int, const=10, nargs='?', help="List images from midjourney page.")
-
-#parser.add_argument("--string", help="an optional string argument", nargs='?')
-
-
 parser.add_argument("--test-mode", action='store_true', default=False, help="enable test mode")
 
 
