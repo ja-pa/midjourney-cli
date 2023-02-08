@@ -38,7 +38,9 @@ def get_midjourney_json(Session_Token,User_ID):
         "Content-Type": "application/json"
     }
 
-    url = "https://www.midjourney.com/api/app/recent-jobs/?orderBy=new&jobStatus=completed&userId=" + User_ID +"&dedupe=true&refreshApi=0"
+    #url = "https://www.midjourney.com/api/app/recent-jobs/?orderBy=new&jobStatus=completed&userId=" + User_ID +"&dedupe=true&refreshApi=0"
+    url = "https://www.midjourney.com/api/app/recent-jobs/?orderBy=new&jobType=upscale&jobStatus=completed&userId=" + User_ID +"&dedupe=true&refreshApi=0"
+    
     response = requests.get(url, headers=headers, verify=True)
     return json.loads(response.content)
 
@@ -47,9 +49,11 @@ def print_images(mj_json,max_prompts=10,download=False,download_path=""):
     y=0
     for i in mj_json:
         y=y+1
+        #print(i,"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
         print("")
         print("Prompt:\n%s" % i["full_command"])
         timestamp=i["enqueue_time"].split()[0].replace("-","_")
+        
         for image_url in i["image_paths"]:
             image_name=os.path.basename(image_url)
             save_name=i["prompt"].replace("  "," ").replace(" ","_").lower()
@@ -58,6 +62,7 @@ def print_images(mj_json,max_prompts=10,download=False,download_path=""):
                 download_image(image_url,download_path+full_name)  
             print(full_name)
             print(image_url)
+
         if y>=max_prompts:
             break
 
