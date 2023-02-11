@@ -112,13 +112,15 @@ def send_prompt_to_midjourney(prompt_list: list,test: bool,prompt_start: str,pro
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-f", "--file", help="Path to input file with prompts")
-parser.add_argument("-t", "--text-prompt", help="Input with prompts.")
+group = parser.add_mutually_exclusive_group()
+group.add_argument("-f", "--file", help="Path to input file with prompts")
+group.add_argument("-j", "--json-file", help="Path to input json file with prompts")
+group.add_argument("-t", "--text-prompt", help="Input with prompts.")
 parser.add_argument("-c", "--config", help="Load config file.")
 parser.add_argument("-s", "--prompt-start", default="", help="Start all prompts with this text.")
 parser.add_argument("-e", "--prompt-end", default="", help="End all prompts with this text.")
 parser.add_argument("-d", "--download-images", nargs='?',type=str, const="NO_PATH_GIVEN", help="Download images to selected directory.")
-parser.add_argument("-l","--list-images", type=int, const=10, nargs='?', help="List images from midjourney page.")
+group.add_argument("-l","--list-images", type=int, const=10, nargs='?', help="List images from midjourney page.")
 parser.add_argument("--test-mode", action='store_true', default=False, help="enable test mode")
 
 
@@ -151,8 +153,20 @@ if args.list_images:
 if args.file:
     with open(args.file, 'r') as f:
         send_prompt_to_midjourney(f.readlines(),args.test_mode,args.prompt_start,args.prompt_end)
-elif args.text_prompt:
+        
+if args.text_prompt:
     input_text = args.text_prompt
     send_prompt_to_midjourney([input_text],args.test_mode,args.prompt_start,args.prompt_end)
+
+if args.json_file:
+    prompt_list=[]
+    with open(args.json_file) as fp:
+        json_obj=json.load(fp)
+        for item in json_obj:
+            print(item)
+            prompt_list.append(item["prompt"])
+    #print(prompt_list)
+    send_prompt_to_midjourney(prompt_list,args.test_mode,args.prompt_start,args.prompt_end)
+    
 #else:
 #    parser.error("Please provide either a file or text input")
