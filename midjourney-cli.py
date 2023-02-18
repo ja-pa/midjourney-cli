@@ -31,19 +31,93 @@ def download_image(url, save_as=None):
         print(f"Failed to download image from URL: {url}")
 
 
-def get_midjourney_json(Session_Token, User_ID):
-    headers = {
-        "User-Agent": 'Midjourney-history-sync/1.0',
-        "Cookie": "__Secure-next-auth.session-token="+Session_Token+"",
-        "Content-Type": "application/json"
-    }
+class Midjourney:
+    def __init__(self, CHANNEL_ID, SERVER_ID, SALAI_TOKEN, MIDJOURNEY_SESSION_TOKEN, USER_ID):
+        self.__CHANNEL_ID = CHANNEL_ID
+        self.__SERVER_ID = SERVER_ID
+        self.__SALAI_TOKEN = SALAI_TOKEN
+        self.__MIDJOURNEY_SESSION_TOKEN = MIDJOURNEY_SESSION_TOKEN
+        self.__USER_ID = USER_ID
+        print("AAAAAAAAAAAAAAAAAAAAAAA", self.__USER_ID)
 
-    # url = "https://www.midjourney.com/api/app/recent-jobs/?orderBy=new&jobStatus=completed&userId=" + User_ID +"&dedupe=true&refreshApi=0"
-    url = "https://www.midjourney.com/api/app/recent-jobs/?orderBy=new&jobType=upscale&jobStatus=completed&userId=" + \
-        User_ID + "&dedupe=true&refreshApi=0"
+    def get_generated_images_json(self, list_upscales: bool):
+        headers = {
+            "User-Agent": 'Midjourney-history-sync/1.0',
+            "Cookie": "__Secure-next-auth.session-token=" + self.__MIDJOURNEY_SESSION_TOKEN,
+            "Content-Type": "application/json"
+        }
+        url = ""
+        if list_upscales:
+            url = "https://www.midjourney.com/api/app/recent-jobs/?orderBy=new&jobType=upscale&jobStatus=completed&userId=" + \
+                self.__USER_ID + "&dedupe=true&refreshApi=0"
+        else:
+            url = "https://www.midjourney.com/api/app/recent-jobs/?orderBy=new&jobStatus=completed&userId=" + \
+                self.__USER_ID + "&dedupe=true&refreshApi=0"
 
-    response = requests.get(url, headers=headers, verify=True)
-    return json.loads(response.content)
+        response = requests.get(url, headers=headers, verify=True)
+        # print(response.content)
+        return json.loads(response.content)
+
+    def __generate_prompt(self, prompt: str):
+        payload = {"type": 2,
+                   "application_id": "936929561302675456",
+                   "guild_id": self.__SERVER_ID,
+                   "channel_id": self.__CHANNEL_ID,
+                   "session_id": "0a010c9eaf31b12c8b2345c0d38bbb7c",
+                   "data": {"version": "994261739745050686",
+                            "id": "938956540159881230",
+                            "name": "imagine",
+                            "type": 1,
+                            "options": [{"type": 3, "name": "prompt", "value": prompt}],
+                            "application_command": {"id": "938956540159881230",
+                                                    "application_id": "936929561302675456",
+                                                    "version": "994261739745050686",
+                                                    "default_permission": True,
+                                                    "default_member_permissions": None,
+                                                    "type": 1,
+                                                    "name": "imagine",
+                                                    "description": "There are endless possibilities...",
+                                                    "dm_permission": True,
+                                                    "options": [{"type": 3, "name": "prompt", "description": "The prompt to imagine", "required": True}]},
+                            "attachments": []}}
+        header = {
+            'authorization': self.__SALAI_TOKEN
+        }
+        response = requests.post("https://discord.com/api/v9/interactions",
+                                 json=payload, headers=header)
+        return response
+
+    def get_upscale(self, index: int, messageId: str, messageHash: str):
+        payload = {"type": 3,
+                   "guild_id": self.__SERVER_ID,
+                   "channel_id": self.__CHANNEL_ID,
+                   "message_flags": 0,
+                   "message_id": messageId,
+                   "application_id": "936929561302675456",
+                   "session_id": "45bc04dd4da37141a5f73dfbfaf5bdcf",
+                   "data": {"component_type": 2,
+                            "custom_id": "MJ::JOB::upsample::{}::{}".format(index, messageHash)}
+                   }
+        header = {
+            'authorization': self.__SALAI_TOKEN
+        }
+        response = requests.post("https://discord.com/api/v9/interactions",
+                                 json=payload, headers=header)
+        return response
+
+    def send_prompt_list(self, prompt_list: list, test: bool, prompt_start: str, prompt_end: str):
+        for i in prompt_list:
+            prompt_text = prompt_start+i+prompt_end
+            print("Prompt: ", prompt_text)
+            if test == False:
+                print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+                response = self.__generate_prompt(prompt_text)
+                if response.status_code >= 400:
+                    print("Request has failed; please try later")
+                else:
+                    print(
+                        "Your prompt image is being prepared, please wait a moment...")
+            time.sleep(3)
 
 
 def print_images(mj_json, max_prompts=10, download=False, download_path=""):
@@ -54,7 +128,9 @@ def print_images(mj_json, max_prompts=10, download=False, download_path=""):
         print("")
         print("Prompt:\n%s" % i["full_command"])
         timestamp = i["enqueue_time"].split()[0].replace("-", "_")
-
+        target_hash = i["id"]
+        target_id = i["platform_message_id"]
+        index_i = 0
         for image_url in i["image_paths"]:
             image_name = os.path.basename(image_url)
             save_name = i["prompt"].replace(
@@ -62,54 +138,15 @@ def print_images(mj_json, max_prompts=10, download=False, download_path=""):
             full_name = "%s_%s_%s" % (timestamp, save_name, image_name)
             if download:
                 download_image(image_url, download_path+full_name)
-            print(full_name)
-            print(image_url)
+            print(index_i, full_name)
+            print(" ", image_url)
+            index_i = index_i + 1
+        print("")
+        print("target_hash", target_hash)
+        print("target_id", target_id)
 
         if y >= max_prompts:
             break
-
-
-def PassPromptToSelfBot(prompt: str):
-    payload = {"type": 2,
-               "application_id": "936929561302675456",
-               "guild_id": SERVER_ID,
-               "channel_id": CHANNEL_ID,
-               "session_id": "0a010c9eaf31b12c8b2345c0d38bbb7c",
-               "data": {"version": "994261739745050686",
-                        "id": "938956540159881230",
-                        "name": "imagine",
-                        "type": 1,
-                        "options": [{"type": 3, "name": "prompt", "value": prompt}],
-                        "application_command": {"id": "938956540159881230",
-                                                "application_id": "936929561302675456",
-                                                "version": "994261739745050686",
-                                                "default_permission": True,
-                                                "default_member_permissions": None,
-                                                "type": 1,
-                                                "name": "imagine",
-                                                "description": "There are endless possibilities...",
-                                                "dm_permission": True,
-                                                "options": [{"type": 3, "name": "prompt", "description": "The prompt to imagine", "required": True}]},
-                        "attachments": []}}
-    header = {
-        'authorization': SALAI_TOKEN
-    }
-    response = requests.post("https://discord.com/api/v9/interactions",
-                             json=payload, headers=header)
-    return response
-
-
-def send_prompt_to_midjourney(prompt_list: list, test: bool, prompt_start: str, prompt_end: str):
-    for i in prompt_list:
-        prompt_text = prompt_start+i+prompt_end
-        print("Prompt: ", prompt_text)
-        if test == False:
-            response = PassPromptToSelfBot(prompt_text)
-            if response.status_code >= 400:
-                print("Request has failed; please try later")
-            else:
-                print("Your prompt image is being prepared, please wait a moment...")
-        time.sleep(3)
 
 
 parser = argparse.ArgumentParser()
@@ -127,6 +164,14 @@ parser.add_argument("-d", "--download-images", nargs='?', type=str,
                     const="NO_PATH_GIVEN", help="Download images to selected directory.")
 group.add_argument("-l", "--list-images", type=int, const=10,
                    nargs='?', help="List images from midjourney page.")
+parser.add_argument("--list-upscales", action='store_true',
+                    default=False, help="List only upscales.")
+
+
+parser.add_argument("-u", "--upscale",  action='store', nargs=3,
+                    help="Upscales image. Takes <index> <target_hash> <target_id>")
+
+
 parser.add_argument("--test-mode", action='store_true',
                     default=False, help="enable test mode")
 
@@ -140,10 +185,12 @@ else:
     CHANNEL_ID, SERVER_ID, SALAI_TOKEN, MIDJOURNEY_SESSION_TOKEN, MIDJOURNEY_USER_ID = load_config(
         "config.json")
 
+mj_obj = Midjourney(CHANNEL_ID, SERVER_ID, SALAI_TOKEN,
+                    MIDJOURNEY_SESSION_TOKEN, MIDJOURNEY_USER_ID)
 
 if args.list_images:
-    midjourney_json = get_midjourney_json(
-        MIDJOURNEY_SESSION_TOKEN, MIDJOURNEY_USER_ID)
+    midjourney_json = mj_obj.get_generated_images_json(
+        list_upscales=args.list_upscales)
     download_path = ""
     download_bool = False
     if args.download_images:
@@ -160,16 +207,26 @@ if args.list_images:
     print_images(midjourney_json, args.list_images,
                  download_bool, download_path)
 
+if args.upscale:
+    print("upsacale aaaaaaaaaaaaa")
+    up_index, up_target_id, up_target_hash = args.upscale
+    print(up_index, up_target_id, up_target_hash)
+    ret = mj_obj.get_upscale(up_index, up_target_id, up_target_hash)
+    print(ret)
 
 if args.file:
     with open(args.file, 'r') as f:
-        send_prompt_to_midjourney(
+        mj_obj.send_prompt_to_midjourney(
             f.readlines(), args.test_mode, args.prompt_start, args.prompt_end)
+        # send_prompt_to_midjourney(
+        #    f.readlines(), args.test_mode, args.prompt_start, args.prompt_end)
 
 if args.text_prompt:
     input_text = args.text_prompt
-    send_prompt_to_midjourney(
+    mj_obj.send_prompt_list(
         [input_text], args.test_mode, args.prompt_start, args.prompt_end)
+    # send_prompt_to_midjourney(
+    #    [input_text], args.test_mode, args.prompt_start, args.prompt_end)
 
 if args.json_file:
     prompt_list = []
@@ -179,7 +236,7 @@ if args.json_file:
             print(item)
             prompt_list.append(item["prompt"])
     # print(prompt_list)
-    send_prompt_to_midjourney(
+    mj_obj.send_prompt_to_midjourney(
         prompt_list, args.test_mode, args.prompt_start, args.prompt_end)
 
 # else:
