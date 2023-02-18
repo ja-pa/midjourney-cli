@@ -148,96 +148,96 @@ def print_images(mj_json, max_prompts=10, download=False, download_path=""):
         if y >= max_prompts:
             break
 
-
-parser = argparse.ArgumentParser()
-group = parser.add_mutually_exclusive_group()
-group.add_argument("-f", "--file", help="Path to input file with prompts")
-group.add_argument("-j", "--json-file",
-                   help="Path to input json file with prompts")
-group.add_argument("-t", "--text-prompt", help="Input with prompts.")
-parser.add_argument("-c", "--config", help="Load config file.")
-parser.add_argument("-s", "--prompt-start", default="",
-                    help="Start all prompts with this text.")
-parser.add_argument("-e", "--prompt-end", default="",
-                    help="End all prompts with this text.")
-parser.add_argument("-d", "--download-images", nargs='?', type=str,
-                    const="NO_PATH_GIVEN", help="Download images to selected directory.")
-group.add_argument("-l", "--list-images", type=int, const=10,
-                   nargs='?', help="List images from midjourney page.")
-parser.add_argument("--list-upscales", action='store_true',
-                    default=False, help="List only upscales.")
-
-
-parser.add_argument("-u", "--upscale",  action='store', nargs=3,
-                    help="Upscales image. Takes <index> <target_hash> <target_id>")
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("-f", "--file", help="Path to input file with prompts")
+    group.add_argument("-j", "--json-file",
+                       help="Path to input json file with prompts")
+    group.add_argument("-t", "--text-prompt", help="Input with prompts.")
+    parser.add_argument("-c", "--config", help="Load config file.")
+    parser.add_argument("-s", "--prompt-start", default="",
+                        help="Start all prompts with this text.")
+    parser.add_argument("-e", "--prompt-end", default="",
+                        help="End all prompts with this text.")
+    parser.add_argument("-d", "--download-images", nargs='?', type=str,
+                        const="NO_PATH_GIVEN", help="Download images to selected directory.")
+    group.add_argument("-l", "--list-images", type=int, const=10,
+                       nargs='?', help="List images from midjourney page.")
+    parser.add_argument("--list-upscales", action='store_true',
+                        default=False, help="List only upscales.")
 
 
-parser.add_argument("--test-mode", action='store_true',
-                    default=False, help="enable test mode")
+    parser.add_argument("-u", "--upscale",  action='store', nargs=3,
+                        help="Upscales image. Takes <index> <target_hash> <target_id>")
 
 
-args = parser.parse_args()
+    parser.add_argument("--test-mode", action='store_true',
+                        default=False, help="enable test mode")
 
-if args.config:
-    CHANNEL_ID, SERVER_ID, SALAI_TOKEN, MIDJOURNEY_SESSION_TOKEN, MIDJOURNEY_USER_ID = load_config(
-        args.config)
-else:
-    CHANNEL_ID, SERVER_ID, SALAI_TOKEN, MIDJOURNEY_SESSION_TOKEN, MIDJOURNEY_USER_ID = load_config(
-        "config.json")
 
-mj_obj = Midjourney(CHANNEL_ID, SERVER_ID, SALAI_TOKEN,
-                    MIDJOURNEY_SESSION_TOKEN, MIDJOURNEY_USER_ID)
+    args = parser.parse_args()
 
-if args.list_images:
-    midjourney_json = mj_obj.get_generated_images_json(
-        list_upscales=args.list_upscales)
-    download_path = ""
-    download_bool = False
-    if args.download_images:
-        if 'NO_PATH_GIVEN' in args.download_images:
-            download_path = ""
-            download_bool = True
-        elif os.path.isdir(args.download_images):
-            download_path = args.download_images
-            download_bool = True
-        else:
-            download_path = ""
-            download_bool = False
-            print("Error! Wrong path. Images can't be downloaded. ")
-    print_images(midjourney_json, args.list_images,
-                 download_bool, download_path)
+    if args.config:
+        CHANNEL_ID, SERVER_ID, SALAI_TOKEN, MIDJOURNEY_SESSION_TOKEN, MIDJOURNEY_USER_ID = load_config(
+            args.config)
+    else:
+        CHANNEL_ID, SERVER_ID, SALAI_TOKEN, MIDJOURNEY_SESSION_TOKEN, MIDJOURNEY_USER_ID = load_config(
+            "config.json")
 
-if args.upscale:
-    print("upsacale aaaaaaaaaaaaa")
-    up_index, up_target_id, up_target_hash = args.upscale
-    print(up_index, up_target_id, up_target_hash)
-    ret = mj_obj.get_upscale(up_index, up_target_id, up_target_hash)
-    print(ret)
+    mj_obj = Midjourney(CHANNEL_ID, SERVER_ID, SALAI_TOKEN,
+                        MIDJOURNEY_SESSION_TOKEN, MIDJOURNEY_USER_ID)
 
-if args.file:
-    with open(args.file, 'r') as f:
-        mj_obj.send_prompt_to_midjourney(
-            f.readlines(), args.test_mode, args.prompt_start, args.prompt_end)
+    if args.list_images:
+        midjourney_json = mj_obj.get_generated_images_json(
+            list_upscales=args.list_upscales)
+        download_path = ""
+        download_bool = False
+        if args.download_images:
+            if 'NO_PATH_GIVEN' in args.download_images:
+                download_path = ""
+                download_bool = True
+            elif os.path.isdir(args.download_images):
+                download_path = args.download_images
+                download_bool = True
+            else:
+                download_path = ""
+                download_bool = False
+                print("Error! Wrong path. Images can't be downloaded. ")
+        print_images(midjourney_json, args.list_images,
+                     download_bool, download_path)
+
+    if args.upscale:
+        print("upsacale aaaaaaaaaaaaa")
+        up_index, up_target_id, up_target_hash = args.upscale
+        print(up_index, up_target_id, up_target_hash)
+        ret = mj_obj.get_upscale(up_index, up_target_id, up_target_hash)
+        print(ret)
+
+    if args.file:
+        with open(args.file, 'r') as f:
+            mj_obj.send_prompt_to_midjourney(
+                f.readlines(), args.test_mode, args.prompt_start, args.prompt_end)
+            # send_prompt_to_midjourney(
+            #    f.readlines(), args.test_mode, args.prompt_start, args.prompt_end)
+
+    if args.text_prompt:
+        input_text = args.text_prompt
+        mj_obj.send_prompt_list(
+            [input_text], args.test_mode, args.prompt_start, args.prompt_end)
         # send_prompt_to_midjourney(
-        #    f.readlines(), args.test_mode, args.prompt_start, args.prompt_end)
+        #    [input_text], args.test_mode, args.prompt_start, args.prompt_end)
 
-if args.text_prompt:
-    input_text = args.text_prompt
-    mj_obj.send_prompt_list(
-        [input_text], args.test_mode, args.prompt_start, args.prompt_end)
-    # send_prompt_to_midjourney(
-    #    [input_text], args.test_mode, args.prompt_start, args.prompt_end)
+    if args.json_file:
+        prompt_list = []
+        with open(args.json_file) as fp:
+            json_obj = json.load(fp)
+            for item in json_obj:
+                print(item)
+                prompt_list.append(item["prompt"])
+        # print(prompt_list)
+        mj_obj.send_prompt_to_midjourney(
+            prompt_list, args.test_mode, args.prompt_start, args.prompt_end)
 
-if args.json_file:
-    prompt_list = []
-    with open(args.json_file) as fp:
-        json_obj = json.load(fp)
-        for item in json_obj:
-            print(item)
-            prompt_list.append(item["prompt"])
-    # print(prompt_list)
-    mj_obj.send_prompt_to_midjourney(
-        prompt_list, args.test_mode, args.prompt_start, args.prompt_end)
-
-# else:
-#    parser.error("Please provide either a file or text input")
+    # else:
+    #    parser.error("Please provide either a file or text input")
